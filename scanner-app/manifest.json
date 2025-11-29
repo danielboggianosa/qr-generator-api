@@ -1,10 +1,10 @@
 {
-  "name": "QR Generator & Scanner",
-  "short_name": "QR Scanner",
+  "name": "BNI Ikigai QR Scanner",
+  "short_name": "BNI Scanner",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f0f2f5",
-  "theme_color": "#28a745",
+  "background_color": "#ffffff",
+  "theme_color": "#D40000",
   "icons": [
     {
       "src": "icon.png",
