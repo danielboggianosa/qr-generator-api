@@ -47,9 +47,6 @@ api.post('/', async (req, res) => {
 });
 
 app.use('/qr-generate', api);
-app.use('*', (req, res) => {
-    res.status(404).send('Not Found');
-});
 
 app.listen(port, () => {
     console.log(`QR Code Generator app listening at http://localhost:${port}`);
