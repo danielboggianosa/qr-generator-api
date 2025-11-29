@@ -6,14 +6,16 @@ const port = 3000;
 
 app.use(express.json());
 
-app.get('/', async (req, res) => {
-    const text = req.query.text;
-    if (!text) {
-        return res.status(400).send('Missing text query parameter');
+api.get('/', async (req, res) => {
+    const { text, url } = req.query;
+    if (!text && !url) {
+        return res.status(400).send('Missing text or url query parameter');
     }
 
     try {
-        const qrImage = await QRCode.toDataURL(text);
+        const transformUrl = new URL(url);
+        const content = text || transformUrl.href;
+        const qrImage = await QRCode.toDataURL(content);
         const img = Buffer.from(qrImage.split(',')[1], 'base64');
         res.writeHead(200, {
             'Content-Type': 'image/png',
@@ -26,14 +28,16 @@ app.get('/', async (req, res) => {
     }
 });
 
-app.post('/url', async (req, res) => {
-    const url = req.body.url;
-    if (!url) {
-        return res.status(400).send('Missing url in body');
+api.post('/', async (req, res) => {
+    const { text, url } = req.body;
+    if (!text && !url) {
+        return res.status(400).send('Missing text or url in body');
     }
 
     try {
-        const qrImage = await QRCode.toDataURL(url);
+        const transformUrl = new URL(url);
+        const content = text || transformUrl.href;
+        const qrImage = await QRCode.toDataURL(content);
         // Return as data URI in JSON for POST
         res.json({ qrCode: qrImage });
     } catch (err) {
@@ -42,8 +46,11 @@ app.post('/url', async (req, res) => {
     }
 });
 
-api.use('/qr-generate', app);
+app.use('/qr-generate', api);
+app.use('*', (req, res) => {
+    res.status(404).send('Not Found');
+});
 
-api.listen(port, () => {
+app.listen(port, () => {
     console.log(`QR Code Generator app listening at http://localhost:${port}`);
 });
