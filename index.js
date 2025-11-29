@@ -2,7 +2,7 @@ const express = require('express');
 const QRCode = require('qrcode');
 const app = express();
 const api = express.Router();
-const port = 3000;
+const port = 55001;
 
 app.use(express.json());
 
@@ -13,8 +13,13 @@ api.get('/', async (req, res) => {
     }
 
     try {
-        const transformUrl = new URL(url);
-        const content = text || transformUrl.href;
+        let content;
+        if (url) {
+            const transformUrl = new URL(url);
+            content = transformUrl.href;
+        } else {
+            content = text;
+        }
         const qrImage = await QRCode.toDataURL(content);
         const img = Buffer.from(qrImage.split(',')[1], 'base64');
         res.writeHead(200, {
