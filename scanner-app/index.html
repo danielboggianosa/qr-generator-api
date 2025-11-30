@@ -49,6 +49,21 @@
                 text-align: center;
                 box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
                 margin-bottom: 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            footer {
+                margin-top: auto;
+                padding: 15px;
+                text-align: center;
+                color: var(--bni-white);
+                background-color: var(--bni-red);
+                width: 100%;
+                box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+                font-size: 0.8rem;
+                font-weight: 600;
             }
 
             h1 {
@@ -180,6 +195,12 @@
                 <button id="scan-again-btn" class="btn btn-scan-again">Escanear Otro</button>
             </div>
         </div>
+
+        <footer>
+            <p>&copy; 2025 BNI Ikigai QR Scanner. Todos los derechos reservados.</p>
+            <p>Desarrollado por Global S1</p>
+            <p>Version 1.0.1</p>
+        </footer>
 
         <script>
             const reader = document.getElementById('reader');
