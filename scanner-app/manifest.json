@@ -1,7 +1,8 @@
 {
   "name": "BNI Ikigai QR Scanner",
   "short_name": "BNI Scanner",
-  "start_url": "/ikigai-qr-scanner",
+  "start_url": "./index.html",
+  "scope": "/ikigai-qr-scanner/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#D40000",
