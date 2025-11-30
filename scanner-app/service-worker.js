@@ -1,9 +1,9 @@
 const CACHE_NAME = 'qr-scanner-v1';
 const ASSETS = [
-    '/',
-    '/index.html',
-    '/manifest.json',
-    '/icon.png',
+    '/ikigai-qr-scanner',
+    '/ikigai-qr-scanner/index.html',
+    '/ikigai-qr-scanner/manifest.json',
+    '/ikigai-qr-scanner/icon.png',
     'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'
 ];
 
