@@ -374,56 +374,93 @@
                 }
             });
 
-            function onScanSuccess(decodedText, decodedResult) {
+            async function onScanSuccess(decodedText, decodedResult) {
                 if (scanner) {
                     scanner.pause();
                 }
 
-                // Parse data: UUID|email|full-name
-                const parts = decodedText.split('|');
-
-                if (parts.length === 3) {
-                    const [uuid, email, name] = parts;
-
-                    currentQrData = {
-                        uuid,
-                        email,
-                        name
-                    };
-
-                    qrResult.innerHTML = ` <div style="margin-bottom: 8px;"><strong>Nombre:</strong><span style="font-size: 1.1em;">${name}</span></div><div style="margin-bottom: 8px;"><strong>Email:</strong>${email}</div><div style="font-size: 0.8em; color: #777;"><strong>ID:</strong>${uuid}</div>`;
-                }
-
-                else {
-                    currentQrData = {
-                        content: decodedText
-                    };
-                    qrResult.textContent = decodedText;
-                }
-
-                // QR codes don't have Mesa info, so hide it
-                document.getElementById('mesa-container').style.display = 'none';
-
                 reader.style.display = 'none';
+
+                // Show loading state
+                resultContainer.innerHTML = '<div style="padding: 20px;"><h3>Buscando datos...</h3><div id="loading-scan" style="color: #666;">Por favor espere</div></div>';
                 resultContainer.style.display = 'block';
-            }
 
-            function startScanner() {
-                reader.style.display = 'block';
-                resultContainer.style.display = 'none';
-                currentQrData = null;
+                let uuid = decodedText;
 
-                if (scanner) {
-                    scanner.resume();
+                // Try to parse UUID|email|name format if exists
+                if (decodedText.includes('|')) {
+                    const parts = decodedText.split('|');
+                    if (parts.length >= 1) {
+                        uuid = parts[0];
+                    }
+                }
+
+                try {
+                    // Fetch details by ID
+                    const response = await fetch(`https://n8n.globals.one/webhook/645c099c-de5f-4d9f-9126-06037cfd0020?ID=${uuid}`);
+                    const data = await response.json();
+
+                    if (Array.isArray(data) && data.length > 0) {
+                        // Restore Result Container Structure before populating
+                        restoreResultContainerStructure();
+                        selectUser(data[0]);
+                    } else {
+                        // Fallback or Error
+                        resultContainer.innerHTML = `
+                            <h3>Error</h3>
+                            <p>No se encontraron datos para este ID.</p>
+                            <p style="font-size:0.8em; color:#999;">ID: ${uuid}</p>
+                            <button id="scan-again-btn-err" class="btn btn-scan-again">Escanear Otro</button>
+                        `;
+                        document.getElementById('scan-again-btn-err').addEventListener('click', startScanner);
+                    }
+                } catch (error) {
+                    console.error("Error fetching scan data:", error);
+                    resultContainer.innerHTML = `
+                        <h3>Error de Conexión</h3>
+                        <p>No se pudo obtener la información del miembro.</p>
+                        <button id="scan-again-btn-err" class="btn btn-scan-again">Intentar de nuevo</button>
+                    `;
+                    document.getElementById('scan-again-btn-err').addEventListener('click', startScanner);
                 }
             }
 
-            approveBtn.addEventListener('click', async () => {
+            // Helper to restore the innerHTML of result-container since we overwrite it for loading
+            function restoreResultContainerStructure() {
+                resultContainer.innerHTML = `
+                    <h3>C&oacute;digo Detectado</h3>
+                    <div id="mesa-container" style="display: none; padding-bottom: 15px; border-bottom: 2px dashed #eee; margin-bottom: 15px;">
+                        <div class="mesa-label">MESA</div>
+                        <div id="mesa-number" class="mesa-large-display">-</div>
+                    </div>
+                    <div id="qrResult"></div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <button id="approve-btn" class="btn btn-approve">Confirmar Asistencia</button>
+                        <button id="scan-again-btn" class="btn btn-scan-again">Escanear Otro</button>
+                    </div>
+                `;
+
+                // Re-bind events because elements were recreated
+                document.getElementById('approve-btn').addEventListener('click', handleApprove);
+                document.getElementById('scan-again-btn').addEventListener('click', () => {
+                    const isSearchMode = document.getElementById('search-container').style.display === 'flex';
+                    if (isSearchMode) {
+                        resultContainer.style.display = 'none';
+                        document.getElementById('search-container').style.display = 'flex';
+                    } else {
+                        startScanner();
+                    }
+                });
+            }
+
+            // Extract approve logic to named function for re-binding
+            async function handleApprove() {
                 if (!currentQrData) return;
 
                 const confirmed = confirm('¿Confirmar asistencia para este miembro?');
 
                 if (confirmed) {
+                    const approveBtn = document.getElementById('approve-btn');
                     const originalText = approveBtn.innerText;
                     approveBtn.innerText = 'Enviando...';
                     approveBtn.disabled = true;
@@ -440,37 +477,39 @@
                         const data = await response.json();
 
                         if (data.success) {
-                            // Optional: Show a success animation or toast
                             alert('¡Asistencia registrada correctamente!');
-                            // Reset state
                             currentQrData = null;
-
                             if (document.getElementById('search-container').style.display === 'flex') {
-                                // If in search mode, keep search list or clear? Let's just go back to search list
                                 resultContainer.style.display = 'none';
                                 document.getElementById('search-container').style.display = 'flex';
-                            }
-
-                            else {
+                            } else {
                                 startScanner();
                             }
-                        }
-
-                        else {
+                        } else {
                             alert('Error: ' + (data.message || 'No se pudo registrar'));
                         }
-                    }
-                    catch (error) {
+                    } catch (error) {
                         console.error('Error:', error);
                         alert('Error de conexión al servidor');
-                    }
-
-                    finally {
+                    } finally {
                         approveBtn.innerText = originalText;
                         approveBtn.disabled = false;
                     }
                 }
-            });
+            }
+
+            function startScanner() {
+                reader.style.display = 'block';
+                resultContainer.style.display = 'none';
+                currentQrData = null;
+
+                if (scanner) {
+                    scanner.resume();
+                }
+            }
+
+            // Initial binding for existing button (though distinct from dynamic one, good to keep for safety)
+            approveBtn.addEventListener('click', handleApprove);
 
             scanAgainBtn.addEventListener('click', () => {
                 // Determine current mode
