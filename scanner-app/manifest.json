@@ -1,5 +1,6 @@
 {
   "name": "BNI Ikigai QR Scanner",
+  "version": "1.1.5",
   "short_name": "BNI Scanner",
   "start_url": "./index.html",
   "scope": "/ikigai-qr-scanner/",
